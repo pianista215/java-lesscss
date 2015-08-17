@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 
+import com.devsmobile.lesscss.error.LessException;
 import com.eclipsesource.v8.JavaVoidCallback;
 import com.eclipsesource.v8.Releasable;
 import com.eclipsesource.v8.V8;
@@ -96,20 +97,28 @@ public class LessCompilerV8 implements LessCompiler{
 	}
 
 	@Override
-	public String compileLessCode(String less) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public void compileLessFileAsync(String fileUri, LessCallback callback) {
-		
+		try {
+			String mainless = loadFile(fileUri);
+			
+			compileLessCodeAsync(mainless, callback);
+			
+		} catch (IOException e) {
+			callback.onLessCompiled(null, new LessException("File not found", e));
+		}
 	}
-
-	@Override
-	public String compileLessFile(String fileUri) {
-		// TODO Auto-generated method stub
-		return null;
+	
+	/**
+	 * Load the file with the uri relative to the class loader
+	 * @param fileUri
+	 * @return
+	 * @throws IOException 
+	 */
+	private String loadFile(String fileUri) throws IOException{
+		String result = "";
+		ClassLoader classLoader = this.getClass().getClassLoader();
+		result = IOUtils.toString(classLoader.getResourceAsStream(fileUri));
+		return result;
 	}
 	
 	@Override

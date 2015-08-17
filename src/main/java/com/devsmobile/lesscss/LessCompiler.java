@@ -16,26 +16,12 @@ public interface LessCompiler {
 	public void compileLessCodeAsync(String less, LessCallback callback);
 	
 	/**
-	 * Compile the less code provided
-	 * @param less
-	 * @return
-	 */
-	public String compileLessCode(String less);
-	
-	/**
 	 * Compile the less file provided as relative to the classLoader (Ex: /ex/proof.less) using an async operation
 	 * @param fileUri
 	 * @param callback
 	 * @return
 	 */
 	public void compileLessFileAsync(String fileUri, LessCallback callback);
-	
-	/**
-	 * Compile the less file provided as relative to the classLoader (Ex: /ex/proof.less)
-	 * @param fileUri
-	 * @return
-	 */
-	public String compileLessFile(String fileUri);
 	
 	/**
 	 * Clean all the V8 objects attached to the lib (must only invoked if you won't use more this object to compile less)
