@@ -2,9 +2,12 @@ package com.devsmobile.lesscss;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.devsmobile.lesscss.error.LessException;
 import com.eclipsesource.v8.JavaVoidCallback;
@@ -17,6 +20,7 @@ public class LessCompilerV8 implements LessCompiler{
 	
 	
 	private V8 runtime;
+	private final Pattern importPattern = Pattern.compile("\\@import \\\"(.*?)\\\"");
 	
 	public LessCompilerV8(){
 		//Prepare the runtime to compile less
@@ -99,9 +103,38 @@ public class LessCompilerV8 implements LessCompiler{
 	@Override
 	public void compileLessFileAsync(String fileUri, LessCallback callback) {
 		try {
+			//Get the ctx of the less to be compiled (Ex: ex/less/ )
+			String mainCtx = "";
+			if(fileUri.contains("/")){
+				mainCtx = fileUri.substring(0,fileUri.lastIndexOf("/")+1);
+			}
 			String mainless = loadFile(fileUri);
+			Matcher matcher = importPattern.matcher(mainless);
 			
-			compileLessCodeAsync(mainless, callback);
+			boolean importsUsed = false;
+			StringBuilder sb = null;
+			int lastIndex = -1;
+			while(matcher.find()){
+				importsUsed = true;
+				if(sb==null){
+					sb = new StringBuilder(mainless.substring(0,matcher.start()));
+				}
+				String importFile = loadFile(mainCtx + matcher.group(1));
+				sb.append(importFile);
+				lastIndex = matcher.end();
+			}
+			
+			if(lastIndex != -1){
+				//Add the rest of the file
+				sb.append(mainless.substring(lastIndex));
+			}
+			
+			
+			if(importsUsed){
+				compileLessCodeAsync(sb.toString(), callback);
+			} else{
+				compileLessCodeAsync(mainless, callback);
+			}
 			
 		} catch (IOException e) {
 			callback.onLessCompiled(null, new LessException("File not found", e));
