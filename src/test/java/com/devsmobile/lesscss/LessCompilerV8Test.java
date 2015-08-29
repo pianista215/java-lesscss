@@ -104,8 +104,7 @@ public class LessCompilerV8Test {
 			public void onLessCompiled(String css, LessException e) {
 				try {
 					String resultExpected = IOUtils.toString(getClass().getClassLoader().getResourceAsStream("bootstrap/result.css"));
-					//I have to compile my own because bootstrap adds to the compiler some options (order...compress...)
-					//assertTrue("result.css equals", compareResults(css, resultExpected));
+					assertTrue("result.css equals", compareResults(css, resultExpected));
 				} catch (IOException e1) {
 					assertTrue(false);
 				}
