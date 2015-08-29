@@ -7,7 +7,6 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import com.devsmobile.lesscss.error.LessException;
 import com.eclipsesource.v8.JavaVoidCallback;
@@ -20,7 +19,6 @@ public class LessCompilerV8 implements LessCompiler{
 	
 	
 	private V8 runtime;
-	private final Pattern importPattern = Pattern.compile("\\@import \\\"(.*?)\\\"");
 	
 	public LessCompilerV8(){
 		//Prepare the runtime to compile less
@@ -108,37 +106,55 @@ public class LessCompilerV8 implements LessCompiler{
 			if(fileUri.contains("/")){
 				mainCtx = fileUri.substring(0,fileUri.lastIndexOf("/")+1);
 			}
+			
 			String mainless = loadFile(fileUri);
-			Matcher matcher = importPattern.matcher(mainless);
+			String processed = processImports(mainCtx, mainless);
 			
-			boolean importsUsed = false;
-			StringBuilder sb = null;
-			int lastIndex = -1;
-			while(matcher.find()){
-				importsUsed = true;
-				if(sb==null){
-					sb = new StringBuilder(mainless.substring(0,matcher.start()));
-				}
-				String importFile = loadFile(mainCtx + matcher.group(1));
-				sb.append(importFile);
-				lastIndex = matcher.end();
-			}
-			
-			if(lastIndex != -1){
-				//Add the rest of the file
-				sb.append(mainless.substring(lastIndex));
-			}
-			
-			
-			if(importsUsed){
-				compileLessCodeAsync(sb.toString(), callback);
-			} else{
-				compileLessCodeAsync(mainless, callback);
-			}
+			compileLessCodeAsync(processed, callback);
 			
 		} catch (IOException e) {
 			callback.onLessCompiled(null, new LessException("File not found", e));
 		}
+	}
+	
+	/**
+	 * Replace the imports in the less file (recurrent)
+	 * @param ctx
+	 * @param lessFileContent
+	 * @return
+	 * @throws IOException 
+	 */
+	private String processImports(String ctx, String lessFileContent) throws IOException{
+		
+		Pattern importPattern = Pattern.compile("\\@import \\\"(.*?)\\\"");
+		Matcher matcher = importPattern.matcher(lessFileContent);
+		
+		StringBuilder sb = null;
+		int lastIndex = -1;
+		while(matcher.find()){
+			if(sb==null){
+				sb = new StringBuilder(lessFileContent.substring(0,matcher.start()));
+			}
+			String importUri = ctx + matcher.group(1);
+			String importCtx = importUri.substring(0,importUri.lastIndexOf("/")+1);
+			String importFile = loadFile(ctx + matcher.group(1));
+			//Process imports in the imported file
+			String finalContent = processImports(importCtx, importFile);
+			
+			sb.append(finalContent);
+			lastIndex = matcher.end();
+		}
+		
+		if(lastIndex != -1){
+			//Add the rest of the file
+			sb.append(lessFileContent.substring(lastIndex));
+		}
+		
+		if(sb==null){ //No imports
+			sb = new StringBuilder(lessFileContent);
+		}
+		
+		return sb.toString();
 	}
 	
 	/**
