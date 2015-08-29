@@ -6,3 +6,5 @@ I need also to pass the different options that less provides (beautify, etc), bu
 
 It used the 2.5.1 version of Less.
 
+You can contact me in www.devsmobile.com
+
