@@ -37,12 +37,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.eclipsesource.j2v8</groupId>
-			<artifactId>j2v8_win32_x86_64</artifactId>
-			<version>3.0.0</version>
-		</dependency>
-
-		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>2.4</version>
@@ -55,4 +49,30 @@
 		</dependency>
 
 	</dependencies>
+	<profiles>
+		<profile>
+			<!-- Default profile-->
+			<id>Windows</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>com.eclipsesource.j2v8</groupId>
+					<artifactId>j2v8_win32_x86_64</artifactId>
+					<version>3.0.0</version>
+				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
+			<id>Linux</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.eclipsesource.j2v8</groupId>
+					<artifactId>j2v8_linux_x86_64</artifactId>
+					<version>4.8.0</version>
+				</dependency>
+			</dependencies>
+		</profile>
+	</profiles>
 </project>
